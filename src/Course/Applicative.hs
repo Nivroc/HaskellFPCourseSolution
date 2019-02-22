@@ -364,8 +364,11 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering fa l = 
+filtering fa l = (<$>) (\ls -> (<$>) snd ls ) ((<$>) (filter fst) fzba)
+                where flbool = sequence $ map fa l
+                      fzba = (<$>) (\boolList -> zip boolList l) flbool 
 
+                    
 -----------------------
 -- SUPPORT LIBRARIES --
 -----------------------
