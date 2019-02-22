@@ -364,9 +364,9 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering fa l = (<$>) (\ls -> (<$>) snd ls ) ((<$>) (filter fst) fzba)
+filtering fa l =  ((<$>) (((<$>) snd) . filter fst) fzba) -- ((<$>) (((<$>) snd) . filter fst) fzba) 
                 where flbool = sequence $ map fa l
-                      fzba = (<$>) (\boolList -> zip boolList l) flbool 
+                      fzba = (<$>) (`zip` l) flbool 
 
                     
 -----------------------
