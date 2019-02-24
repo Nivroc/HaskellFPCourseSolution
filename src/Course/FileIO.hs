@@ -118,15 +118,15 @@ getFiles l = sequence $ (<$>) getFile l
 run ::
   FilePath
   -> IO ()
-run a = do one <- getFile a
-           let filesList = snd one `strSplitAll` "\n"
-           files <- getFiles filesList
-           printFiles files
+run a = error ""--do one <- getFile a
+          -- let filesList = snd one `strSplitAll` "\n"
+          -- files <- getFiles filesList
+         --  printFiles files
 
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
-main = getArgs >> run
+main = error ""--getArgs >> run
 
 ----
 

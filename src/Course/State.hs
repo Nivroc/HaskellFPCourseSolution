@@ -13,6 +13,7 @@ import Course.Functor
 import Course.Applicative
 import Course.Monad
 import qualified Data.Set as S
+import qualified Data.Char as C
 
 -- $setup
 -- >>> import Test.QuickCheck.Function
@@ -75,7 +76,7 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) f st = State{runState = ((f . fst . runState st) &&& (snd . runState st))}
+  (<$>) f st = State $ (f . fst . runState st) &&& (snd . runState st)
 
 -- | Implement the `Applicative` instance for `State s`.
 --
@@ -97,8 +98,9 @@ instance Applicative (State s) where
     State s (a -> b)
     -> State s a
     -> State s b 
-  (<*>) (State sab) (State sa) = State(\s -> ((fst . sab $ s)(fst . sa $ s), s))
-
+  (<*>) (State sab) (State sa) = State $ \s -> let (fab, next) = sab s
+                                                   (ss, next') = sa next
+                                               in (fab ss , next') 
 -- | Implement the `Bind` instance for `State s`.
 --
 -- >>> runState ((const $ put 2) =<< put 1) 0
@@ -111,7 +113,9 @@ instance Monad (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) asb (State sa) = State(\s -> (runState . asb . fst . sa) s s)
+  (=<<) f (State sa) = State $ \s -> let (a, next) = sa s
+                                         (State sb) = f a
+                                       in sb next
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
@@ -127,12 +131,29 @@ instance Monad (State s) where
 --
 -- >>> let p x = (\s -> (const $ pure (x == 'i')) =<< put (1+s)) =<< get in runState (findM p $ listh ['a'..'h']) 0
 -- (Empty,8)
+ff :: a -> Bool -> Optional a
+ff b y
+  | y = Full b
+  | otherwise = Empty
+
+fboa :: Monad f => f Bool -> a -> f (Optional a)
+fboa fb x = (=<<) (pure . ff x) fb
+
+c :: Monad f => f(Optional a) -> f(Optional a) -> f(Optional a)
+c fa1 fa2 = (=<<) t fa1
+  where t (Full _) = fa1
+        t Empty = fa2
+          
 findM ::
   Monad f =>
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM = 
+findM _ Nil       = return Empty
+findM pre (x:.xs) = pre x >>= (\re -> if re then return $ Full x else findM pre xs)
+-- findM afb (a :. as) = c (fboa (afb a) a) (findM afb as) 
+-- findM _ Nil = pure Empty
+
 
 -- | Find the first element in a `List` that repeats.
 -- It is possible that no element repeats, hence an `Optional` result.
@@ -145,8 +166,9 @@ firstRepeat ::
   Ord a =>
   List a
   -> Optional a
-firstRepeat =
-  error "todo: Course.State#firstRepeat"
+firstRepeat la = eval (findM f la) S.empty
+                    where f x = State $ (S.member x) &&& (S.insert x)
+
 
 -- | Remove all duplicate elements in a `List`.
 -- /Tip:/ Use `filtering` and `State` with a @Data.Set#Set@.
@@ -158,8 +180,8 @@ distinct ::
   Ord a =>
   List a
   -> List a
-distinct =
-  error "todo: Course.State#distinct"
+distinct la = eval (filtering f la) S.empty
+  where f x = State $ \s -> ((not $ S.member x s), (S.insert x s))
 
 -- | A happy number is a positive integer, where the sum of the square of its digits eventually reaches 1 after repetition.
 -- In contrast, a sad number (not a happy number) is where the sum of the square of its digits never reaches 1
@@ -182,8 +204,12 @@ distinct =
 --
 -- >>> isHappy 44
 -- True
+
+square :: Int -> Int
+square a = foldLeft (\acc x -> acc + ((\y -> y*y) $ C.digitToInt x)) 0 (listh $ show a)
+
 isHappy ::
-  Integer
+  Int
   -> Bool
-isHappy =
-  error "todo: Course.State#isHappy"
+isHappy a = (firstRepeat $ list a) == Full 1
+  where list = produce square  
