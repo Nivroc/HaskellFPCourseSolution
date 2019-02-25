@@ -84,7 +84,7 @@ instance Monad f => Monad (StateT s f) where
     (a -> StateT s f b)
     -> StateT s f a
     -> StateT s f b
-  (=<<) yolo sfa = 
+  (=<<) yolo sfa = StateT $ \s -> let StateT fas = sfa s
 
 -- | A `State'` is `StateT` specialised to the `ExactlyOne` functor.
 type State' s a =
