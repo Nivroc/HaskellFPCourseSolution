@@ -33,8 +33,7 @@ instance Extend ExactlyOne where
     (ExactlyOne a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance ExactlyOne"
+  (<<=) (ExactlyOne fab) (ExactlyOne a) = ExactlyOne $ fab a
 
 -- | Implement the @Extend@ instance for @List@.
 --
@@ -51,8 +50,9 @@ instance Extend List where
     (List a -> b)
     -> List a
     -> List b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance List"
+  (<<=) lfab la = foldRight (++) Nil ll
+    where ll = (<$>) (\f -> (<$>) f la ) lfab  
+
 
 -- | Implement the @Extend@ instance for @Optional@.
 --
@@ -66,8 +66,9 @@ instance Extend Optional where
     (Optional a -> b)
     -> Optional a
     -> Optional b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance Optional"
+  (<<=) _ Empty = Empty
+  (<<=) Empty _ = Empty
+  (<<=) (Full fab) (Full a) = Full $ fab a
 
 -- | Duplicate the functor using extension.
 --
