@@ -41,4 +41,4 @@ instance Comonad ExactlyOne where
   (a -> b)
   -> f a
   -> f b
-(<$$>) = (<$>) 
+(<$$>) = error "" --(<$>) 
