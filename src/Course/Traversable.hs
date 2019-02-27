@@ -88,8 +88,7 @@ data Product f g a =
 instance (Functor f, Functor g) =>
   Functor (Product f g) where
 -- Implement the (<$>) function for a Functor instance for Product
-  (<$>) =
-    error "todo: Course.Traversable (<$>)#instance (Product f g)"
+  (<$>) fab (Product a) = Product $ fab a
 
 instance (Traversable f, Traversable g) =>
   Traversable (Product f g) where
