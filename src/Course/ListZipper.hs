@@ -64,16 +64,15 @@ data MaybeListZipper a =
 -- >>> (+1) <$> (zipper [3,2,1] 4 [5,6,7])
 -- [4,3,2] >5< [6,7,8]
 instance Functor ListZipper where
-  (<$>) =
-    error "todo: Course.ListZipper (<$>)#instance ListZipper"
+  (<$>) ab (ListZipper lla a rla) = ListZipper (ab <$> lla) (ab a) (ab <$> rla) 
 
 -- | Implement the `Functor` instance for `MaybeListZipper`.
 --
 -- >>> (+1) <$> (IsZ (zipper [3,2,1] 4 [5,6,7]))
 -- [4,3,2] >5< [6,7,8]
 instance Functor MaybeListZipper where
-  (<$>) =
-    error "todo: Course.ListZipper (<$>)#instance MaybeListZipper"
+  (<$>) ab (IsZ lz) = IsZ $ ab <$> lz
+  (<$>) _ _ = IsNotZ 
 
 -- | Convert the given zipper back to a list.
 --
@@ -88,8 +87,7 @@ instance Functor MaybeListZipper where
 toList ::
   ListZipper a
   -> List a
-toList =
-  error "todo: Course.ListZipper#toList"
+toList (ListZipper lla a rla) = lla ++ (a :. rla)
 
 -- | Convert the given (maybe) zipper back to a list.
 toListZ ::
@@ -112,8 +110,8 @@ toListZ (IsZ z) =
 fromList ::
   List a
   -> MaybeListZipper a
-fromList =
-  error "todo: Course.ListZipper#fromList"
+fromList (x :. xs) = IsZ $ ListZipper Nil x xs
+fromList Nil = IsNotZ
 
 -- | Retrieve the `ListZipper` from the `MaybeListZipper` if there is one.
 --
@@ -123,8 +121,8 @@ fromList =
 toOptional ::
   MaybeListZipper a
   -> Optional (ListZipper a)
-toOptional =
-  error "todo: Course.ListZipper#toOptional"
+toOptional (IsZ a) = Full a
+toOptional _ = Empty
 
 zipper ::
   [a]
@@ -183,8 +181,7 @@ withFocus ::
   (a -> a)
   -> ListZipper a
   -> ListZipper a
-withFocus =
-  error "todo: Course.ListZipper#withFocus"
+withFocus ida (ListZipper lla a rla) = ListZipper lla (ida a) rla
 
 -- | Set the focus of the zipper to the given value.
 -- /Tip:/ Use `withFocus`.
@@ -198,8 +195,7 @@ setFocus ::
   a
   -> ListZipper a
   -> ListZipper a
-setFocus =
-  error "todo: Course.ListZipper#setFocus"
+setFocus ida (ListZipper lla _ rla) = ListZipper lla ida rla
 
 -- A flipped infix alias for `setFocus`. This allows:
 --
